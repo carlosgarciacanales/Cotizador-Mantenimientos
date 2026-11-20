@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador de Mantenimientos — Protecto Deco</title>
+<style>
+  :root{
+    --navy:#122744;
+    --navy-dark:#0b1a2e;
+    --gold:#b8935a;
+    --gold-light:#d8b78c;
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --border:#e1e4e9;
+    --text:#1c2530;
+    --muted:#6b7480;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);
+    color:#fff;
+    padding:28px 32px;
+  }
+  header h1{margin:0 0 4px 0;font-size:22px;font-weight:600;letter-spacing:.2px;}
+  header p{margin:0;color:#c7d0dc;font-size:13.5px;}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:22px 24px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--navy);
+    margin:0 0 16px 0;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+  fieldset{border:none;padding:0;margin:0 0 18px 0;}
+  .opt{
+    display:block;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    cursor:pointer;
+    font-size:13.5px;
+    transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:var(--gold-light);}
+  .opt input{margin-right:8px;}
+  .opt.selected{border-color:var(--gold);background:#fbf6ee;}
+  .opt .sub{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    margin-top:2px;
+    margin-left:22px;
+  }
+  .breakdown-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:9px 0;
+    border-bottom:1px dashed var(--border);
+    font-size:14px;
+  }
+  .breakdown-row:last-child{border-bottom:none;}
+  .breakdown-row .label{color:var(--muted);}
+  .breakdown-row .value{font-weight:600;font-variant-numeric:tabular-nums;}
+  .breakdown-row.muted .label,.breakdown-row.muted .value{color:var(--muted);font-weight:500;font-size:13px;}
+  .breakdown-row.total{
+    border-top:2px solid var(--navy);
+    border-bottom:none;
+    margin-top:6px;
+    padding-top:12px;
+  }
+  .breakdown-row.total .label{color:var(--navy);font-weight:700;font-size:15px;}
+  .breakdown-row.total .value{color:var(--navy);font-weight:700;font-size:18px;}
+  .mensualidad-box{
+    margin-top:16px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .mensualidad-box .m-label{font-size:13px;color:#c7d0dc;}
+  .mensualidad-box .m-value{font-size:24px;font-weight:700;color:var(--gold-light);}
+  .warn{
+    background:#fdf2ee;
+    border:1px solid #f0c9b8;
+    color:#9a4a26;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13px;
+    margin-top:10px;
+  }
+  input[type=text]{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13.5px;
+    font-family:inherit;
+    color:var(--text);
+    background:#fff;
+  }
+  .pdf-btn{
+    display:block;
+    width:100%;
+    margin-top:14px;
+    padding:12px 16px;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    letter-spacing:.2px;
+  }
+  .pdf-btn:hover{background:#a17e49;}
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(11,26,46,.55);
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#fff;border-radius:12px;padding:26px 28px;width:380px;max-width:100%;}
+  .modal-box h3{margin:0 0 18px 0;font-size:16px;color:var(--navy);}
+  .modal-box label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  .modal-field{margin-bottom:14px;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions button{
+    flex:1;
+    padding:11px 14px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+    border:none;
+  }
+  .modal-cancel{background:#eef0f3;color:var(--text);}
+  .modal-cancel:hover{background:#e2e5ea;}
+  .modal-confirm{background:var(--gold);color:#fff;}
+  .modal-confirm:hover{background:#a17e49;}
+  .print-only{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #print-area, #print-area *{visibility:visible;}
+    #print-area{display:block;position:absolute;top:0;left:0;width:100%;padding:30px;}
+    #print-area h1{font-size:20px;color:#122744;margin:0 0 4px 0;}
+    #print-area .p-sub{color:#555;font-size:12.5px;margin-bottom:18px;}
+    #print-area table{width:100%;border-collapse:collapse;margin-top:10px;}
+    #print-area td{padding:7px 0;border-bottom:1px dashed #ccc;font-size:13.5px;}
+    #print-area td.p-label{color:#555;}
+    #print-area td.p-value{text-align:right;font-weight:600;}
+    #print-area tr.p-total td{border-top:2px solid #122744;border-bottom:none;font-weight:700;font-size:15px;padding-top:12px;}
+    #print-area .p-meta{margin-bottom:16px;font-size:13.5px;}
+    #print-area .p-meta div{margin-bottom:4px;}
+    #print-area .p-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin:18px 0 4px 0;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cotizador de Mantenimientos — Protecto Deco</h1>
+  <p>León · Guadalajara · Mantenimiento de 1, 3 y 5 años</p>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT: INPUTS -->
+    <div>
+      <div class="card">
+        <h2>1. Plaza</h2>
+        <fieldset>
+          <label class="opt" data-plaza="leon">
+            <input type="radio" name="plaza" value="leon" checked> León
+          </label>
+          <label class="opt" data-plaza="guadalajara">
+            <input type="radio" name="plaza" value="guadalajara"> Guadalajara
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="card">
+        <h2>2. Tipo de venta</h2>
+        <fieldset>
+          <label class="opt">
+            <input type="radio" name="rol" value="vendedor" checked> Vendedor
+            <span class="sub">Aplica enganche del 10% sobre el precio del mantenimiento</span>
+          </label>
+          <label class="opt">
+            <input type="radio" name="rol" value="administrativo"> Administrativo
+            <span class="sub">Sin enganche — se financia el 100% del precio del mantenimiento</span>
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="card">
+        <h2>3. Mantenimiento</h2>
+        <fieldset>
+          <label class="opt" data-mant="1">
+            <input type="radio" name="mant" value="1" checked> Mantenimiento de 1 año
+            <span class="sub" id="mant-1-sub"></span>
+          </label>
+          <label class="opt" data-mant="3">
+            <input type="radio" name="mant" value="3"> Mantenimiento de 3 años
+            <span class="sub" id="mant-3-sub"></span>
+          </label>
+          <label class="opt" data-mant="5">
+            <input type="radio" name="mant" value="5"> Mantenimiento de 5 años
+            <span class="sub" id="mant-5-sub"></span>
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="card">
+        <h2>4. Forma de pago</h2>
+        <fieldset>
+          <label class="opt" data-plan="contado" data-meses="1" data-tasa="0">
+            <input type="radio" name="plan" value="contado" checked> Contado
+          </label>
+          <label class="opt" data-plan="3m" data-meses="3" data-tasa="0">
+            <input type="radio" name="plan" value="3m"> 3 meses sin intereses
+          </label>
+          <label class="opt" data-plan="6m" data-meses="6" data-tasa="0.04" id="opt-6m">
+            <input type="radio" name="plan" value="6m"> 6 meses — 4% de interés mensual
+          </label>
+        </fieldset>
+      </div>
+    </div>
+
+    <!-- RIGHT: BREAKDOWN -->
+    <div>
+      <div class="card">
+        <h2>Desglose de la cotización</h2>
+
+        <div class="breakdown-row">
+          <span class="label">Precio del mantenimiento</span>
+          <span class="value" id="v-precio">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label" id="lbl-enganche">Enganche (10%)</span>
+          <span class="value" id="v-enganche">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Subtotal (precio − enganche)</span>
+          <span class="value" id="v-subtotal">—</span>
+        </div>
+        <div class="breakdown-row muted" id="row-interes">
+          <span class="label">Interés total del plan</span>
+          <span class="value" id="v-interes">—</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="label">Monto de financiamiento</span>
+          <span class="value" id="v-financiamiento">—</span>
+        </div>
+        <div class="breakdown-row total">
+          <span class="label">Saldo total a pagar</span>
+          <span class="value" id="v-total">—</span>
+        </div>
+
+        <div class="mensualidad-box">
+          <div class="m-label" id="m-label">Pago único (contado)</div>
+          <div class="m-value" id="v-mensualidad">—</div>
+        </div>
+
+        <button type="button" class="pdf-btn" onclick="abrirModalPDF()">Descargar cotización en PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: nombre y teléfono solo al descargar el PDF -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3>Datos para la cotización</h3>
+    <div class="modal-field">
+      <label for="nombre-cliente">Nombre del cliente</label>
+      <input type="text" id="nombre-cliente" placeholder="Nombre completo">
+    </div>
+    <div class="modal-field">
+      <label for="telefono-cliente">Teléfono</label>
+      <input type="text" id="telefono-cliente" placeholder="10 dígitos">
+    </div>
+    <div class="warn" id="pdf-warn-box" style="display:none;"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel" onclick="cerrarModalPDF()">Cancelar</button>
+      <button type="button" class="modal-confirm" onclick="descargarPDF()">Generar PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="print-only" id="print-area"></div>
+
+<script>
+function fmt(n){
+  return n.toLocaleString('es-MX', {style:'currency', currency:'MXN', minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getSelected(name){
+  return document.querySelector(`input[name="${name}"]:checked`).closest('.opt');
+}
+function updateSelectedStyles(){
+  document.querySelectorAll('.opt').forEach(o=>{
+    const input = o.querySelector('input');
+    o.classList.toggle('selected', input.checked);
+  });
+}
+
+const PLAZAS = {
+  leon:        { label: 'León',        mant: { 1: 2300, 3: 4000, 5: 6500 } },
+  guadalajara: { label: 'Guadalajara', mant: { 1: 1500, 3: 3600, 5: 5000 } }
+};
+const ENGANCHE_PCT = 0.10;
+// Plan de 6 meses solo disponible para mantenimientos de 3 y 5 años
+const MAX_MESES = { 1: 3, 3: 6, 5: 6 };
+
+function actualizarTextos(){
+  const plazaKey = getSelected('plaza').dataset.plaza;
+  [1,3,5].forEach(a=>{
+    document.getElementById(`mant-${a}-sub`).textContent = fmt(PLAZAS[plazaKey].mant[a]);
+  });
+}
+
+function ajustarPlanes(){
+  const anios = parseInt(getSelected('mant').dataset.mant);
+  const opt6 = document.getElementById('opt-6m');
+  const permite6 = MAX_MESES[anios] >= 6;
+  opt6.style.display = permite6 ? 'block' : 'none';
+  if(!permite6 && opt6.querySelector('input').checked){
+    document.querySelector('input[name="plan"][value="contado"]').checked = true;
+  }
+}
+
+function calcular(){
+  ajustarPlanes();
+  updateSelectedStyles();
+  actualizarTextos();
+
+  const plazaKey = getSelected('plaza').dataset.plaza;
+  const rol = document.querySelector('input[name="rol"]:checked').value;
+  const anios = parseInt(getSelected('mant').dataset.mant);
+  const planOpt = getSelected('plan');
+  const planKey = planOpt.dataset.plan;
+  const meses = parseInt(planOpt.dataset.meses);
+  const tasaMensual = parseFloat(planOpt.dataset.tasa);
+
+  const precio = PLAZAS[plazaKey].mant[anios];
+  const enganche = rol === 'vendedor' ? precio * ENGANCHE_PCT : 0;
+  const subtotal = precio - enganche;
+
+  let interes = 0, montoFinanciamiento = 0, saldoTotal = 0, mensualidad = 0, mLabel = '';
+
+  if(planKey === 'contado'){
+    saldoTotal = precio;
+    mensualidad = subtotal;
+    mLabel = 'Pago único (contado)';
+  } else {
+    interes = subtotal * tasaMensual * meses;
+    montoFinanciamiento = subtotal + interes;
+    saldoTotal = enganche + montoFinanciamiento;
+    mensualidad = montoFinanciamiento / meses;
+    mLabel = `Mensualidad × ${meses} meses`;
+  }
+
+  document.getElementById('lbl-enganche').textContent = rol === 'vendedor' ? 'Enganche (10%)' : 'Enganche (administrativo — no aplica)';
+  document.getElementById('v-precio').textContent = fmt(precio);
+  document.getElementById('v-enganche').textContent = fmt(enganche);
+  document.getElementById('v-subtotal').textContent = fmt(subtotal);
+  document.getElementById('v-interes').textContent = fmt(interes);
+  document.getElementById('v-financiamiento').textContent = fmt(montoFinanciamiento);
+  document.getElementById('v-total').textContent = fmt(saldoTotal);
+  document.getElementById('v-mensualidad').textContent = fmt(mensualidad);
+  document.getElementById('m-label').textContent = mLabel;
+  document.getElementById('row-interes').style.display = (interes > 0) ? 'flex' : 'none';
+}
+
+document.querySelectorAll('input[type=radio]').forEach(el=>{
+  el.addEventListener('change', calcular);
+});
+calcular();
+
+// ---------- PDF (vía diálogo de impresión del navegador) ----------
+const ROL_LABELS = { vendedor: 'Vendedor', administrativo: 'Administrativo' };
+const PLAN_LABELS = {
+  contado: 'Contado',
+  '3m': '3 meses sin intereses',
+  '6m': '6 meses — 4% de interés mensual'
+};
+
+function abrirModalPDF(){
+  document.getElementById('pdf-warn-box').style.display = 'none';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function cerrarModalPDF(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function descargarPDF(){
+  const nombre = document.getElementById('nombre-cliente').value.trim();
+  const telefono = document.getElementById('telefono-cliente').value.trim();
+  const plaza = PLAZAS[getSelected('plaza').dataset.plaza].label;
+  const pdfWarn = document.getElementById('pdf-warn-box');
+
+  if(!nombre || !telefono){
+    pdfWarn.style.display = 'block';
+    pdfWarn.textContent = 'Captura nombre y teléfono antes de generar la cotización.';
+    return;
+  }
+  pdfWarn.style.display = 'none';
+
+  const rol = document.querySelector('input[name="rol"]:checked').value;
+  const anios = getSelected('mant').dataset.mant;
+  const planKey = getSelected('plan').dataset.plan;
+  const fecha = new Date().toLocaleDateString('es-MX', {year:'numeric', month:'long', day:'numeric'});
+  const interesVisible = document.getElementById('row-interes').style.display !== 'none';
+  const g = id => document.getElementById(id).textContent;
+
+  document.getElementById('print-area').innerHTML = `
+    <h1>Cotización de Mantenimiento — Protecto Deco</h1>
+    <div class="p-sub">Generada el ${fecha}</div>
+    <div class="p-meta">
+      <div><strong>Cliente:</strong> ${esc(nombre)}</div>
+      <div><strong>Teléfono:</strong> ${esc(telefono)}</div>
+      <div><strong>Plaza:</strong> ${esc(plaza)}</div>
+      <div><strong>Tipo de venta:</strong> ${ROL_LABELS[rol]}</div>
+    </div>
+    <div class="p-section-title">Mantenimiento cotizado</div>
+    <table>
+      <tr><td class="p-label">Mantenimiento</td><td class="p-value">${anios} ${anios === '1' ? 'año' : 'años'}</td></tr>
+      <tr><td class="p-label">Forma de pago</td><td class="p-value">${PLAN_LABELS[planKey]}</td></tr>
+    </table>
+    <div class="p-section-title">Desglose</div>
+    <table>
+      <tr><td class="p-label">Precio del mantenimiento</td><td class="p-value">${g('v-precio')}</td></tr>
+      <tr><td class="p-label">${g('lbl-enganche')}</td><td class="p-value">${g('v-enganche')}</td></tr>
+      <tr><td class="p-label">Subtotal (precio − enganche)</td><td class="p-value">${g('v-subtotal')}</td></tr>
+      ${interesVisible ? `<tr><td class="p-label">Interés total del plan</td><td class="p-value">${g('v-interes')}</td></tr>` : ''}
+      <tr><td class="p-label">Monto de financiamiento</td><td class="p-value">${g('v-financiamiento')}</td></tr>
+      <tr class="p-total"><td class="p-label">Saldo total a pagar</td><td class="p-value">${g('v-total')}</td></tr>
+      <tr><td class="p-label">${g('m-label')}</td><td class="p-value">${g('v-mensualidad')}</td></tr>
+    </table>
+  `;
+
+  cerrarModalPDF();
+  window.print();
+}
+</script>
+
+</body>
+</html>
